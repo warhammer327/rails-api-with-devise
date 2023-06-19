@@ -1,7 +1,8 @@
 class Api::V1::CompaniesController < ApiController
-  before_action :set_company, only: [:show]
+  before_action :set_company, only: [:show, :update, :destroy]
   def index
   @companies = current_user.companies
+  render json: @companies, status: :ok
   end
 
   def show
@@ -9,9 +10,25 @@ class Api::V1::CompaniesController < ApiController
   end
 
   def create
-    @company = Company.new(company_params)
+    #@company = Company.new(company_params)
+    @company = current_user.companies.new(company_params)
+    if @company.save
+      render json: @company, status: :ok
+    else
+      render json: {data: @company.errors.full_messages, status: "failed"}, status: unprocessable_entity
+    end
+  end
+  def update
+    if @company.update(company_params)
+      render json: @company, status: :ok
+    else
+      render json: {data: @company.errors.full_messages, status: "failed"}, status: unprocessable_entity
+    end
   end
 
+  def destroy
+
+  end
   private
 
   def set_company
@@ -21,6 +38,6 @@ class Api::V1::CompaniesController < ApiController
   end
 
   def company_params
-    params.requrie(:company).permit(:name, :year, :user_id)
+    params.require(:company).permit(:name, :year, :user_id)
   end
 end

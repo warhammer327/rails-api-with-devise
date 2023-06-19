@@ -27,14 +27,18 @@ class Api::V1::CompaniesController < ApiController
   end
 
   def destroy
-
+    if @company.destroy
+      render json: {data: 'Company deleted success', status: :ok}
+    else
+      render json: {data: 'Something went wrong', status: 'fail'}
+    end
   end
   private
 
   def set_company
     @company = current_user.companies.find(params[:id])
   rescue ActiveRecord::RecordNotFound => errors
-    render json: error.message, status: :unauthorized
+    render json: errors.message, status: :unauthorized
   end
 
   def company_params

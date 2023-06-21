@@ -1,24 +1,11 @@
-# README
+# Ruby on Rails: Authentication, Access Control & Rate Limiting
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Steps are necessary to get the application running on local machine:
 
-Things you may want to cover:
+* Ruby version: 3.0
 
-* Ruby version
+* Rails version: 7.0
 
-* System dependencies
+* Database creation: ``` rails db:create; rails db:migrate ``` inside the project root. 
 
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+* ``` rails s ```

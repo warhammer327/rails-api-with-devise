@@ -6,6 +6,8 @@ Steps are necessary to get the application running on local machine:
 
 * Rails version: 7.0
 
+* Database: Postgres
+
 * Database creation: ``` rails db:create; rails db:migrate ``` inside the project root. 
 
-* ``` rails s ```
+* To run the project: ``` rails s ```

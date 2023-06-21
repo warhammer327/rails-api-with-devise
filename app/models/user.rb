@@ -10,7 +10,7 @@ class User < ApplicationRecord
   ROLES = %w{super_admin admin manager editor collaborator}
 
   ROLES.each do |role_name|
-    define_method "#{role_name}" do
+    define_method "#{role_name}?" do
       role == role_name
     end
   end

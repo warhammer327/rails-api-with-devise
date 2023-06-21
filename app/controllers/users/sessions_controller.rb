@@ -7,7 +7,7 @@ class Users::SessionsController < Devise::SessionsController
   def respond_with(resource, option={})
   puts "respond_with function in session"
       render json: {
-        status: { code: 200, message: 'sign in success', data: current_user}
+        status: { code: 200, message: 'signed in: '+current_user.email , data: current_user}
       }, status: :ok
   end
 
@@ -18,7 +18,7 @@ class Users::SessionsController < Devise::SessionsController
     if current_user
       render json: {
         status: 200,
-        message: "signed out"
+        message: "signed out user: " + current_user.email
       }, status: :ok
     else
       render json: {

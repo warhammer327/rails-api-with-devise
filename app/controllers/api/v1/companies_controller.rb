@@ -1,7 +1,9 @@
 class Api::V1::CompaniesController < ApiController
+  load_and_authorize_resource
   before_action :set_company, only: [:show, :update, :destroy]
   def index
-  @companies = current_user.companies
+   @companies = Company.accessible_by(current_ability)
+  #@companies = current_user.companies
   render json: @companies, status: :ok
   end
 
@@ -10,14 +12,15 @@ class Api::V1::CompaniesController < ApiController
   end
 
   def create
-    #@company = Company.new(company_params)
-    @company = current_user.companies.new(company_params)
+    @company = Company.new(company_params)
+    #@company = current_user.companies.new(company_params)
     if @company.save
       render json: @company, status: :ok
     else
       render json: {data: @company.errors.full_messages, status: "failed"}, status: unprocessable_entity
     end
   end
+  
   def update
     if @company.update(company_params)
       render json: @company, status: :ok
@@ -36,7 +39,8 @@ class Api::V1::CompaniesController < ApiController
   private
 
   def set_company
-    @company = current_user.companies.find(params[:id])
+    @company = Company.find(params[:id])
+    #@company = current_user.companies.find(params[:id])
   rescue ActiveRecord::RecordNotFound => errors
     render json: errors.message, status: :unauthorized
   end

@@ -9,6 +9,11 @@ class Ability
     elsif user.admin?
       can :read, Company, user_id: user.id
       can :update, Company, user_id: user.id
+    elsif user.manager?
+      can :read, Company, user_id: user.id
+      can :destroy, Company, user_id: user.id
+    elsif user.collaborator?
+      can :read, Company, user_id: user.id
     end
     # Define abilities for the user here. For example:
     #

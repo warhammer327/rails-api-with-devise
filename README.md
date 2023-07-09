@@ -1,6 +1,6 @@
 # Ruby on Rails: Authentication, Access Control & Rate Limiting
 
-## Steps are necessary to get the application running on local machine:
+## Steps necessary to get the application running on local machine:
 
 * Ruby version: 3.0
 

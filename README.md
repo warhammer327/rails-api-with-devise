@@ -202,3 +202,89 @@ config.middleware.use  config.session_store, config.session_options
 config.middleware.use  Rack::Attack
 ```
 
+## Authentication in action
+Now it is time for a field test. Let's run the server and then open Postman. Hit the the `localhost:3000/users/` with POST method and with a user object in body.
+```
+{
+"user":  {
+	"email":  "super@test.com",
+	"password":  "123456"
+	}
+}
+```
+If you have done everything correctly, then you should see that user has been created successfully in the server log with a success code 200. Check the response header and copy the bearer token from authentication.
+Create another tab with DELETE method in postman. Now hit `localhost:3000/users/sign_out`, before hitting send, go to header, then add `Authorization` field and pass the value as `Bearer  [token]`. Once you hit send you are likely to get an error `...undefined method 'respond_to'....`. To solve it we will have to add `respond_to` method to both registration and session controller. Add the following into registration controller.
+```
+class  Users::RegistrationsController < Devise::RegistrationsController
+	respond_to  :json
+
+	private
+		def  respond_with(resource, option={})
+			if  resource.persisted?
+				render  json: {
+					status: { code:  200, message:  'signed up successfully', data:  resource}
+				}, status:  :ok
+			else
+				render  json: {
+				status: {message:  'operation failed', errors: resource.errors.full_messages},
+				status:  :unprocessable_entity
+			}
+		end
+	end
+end
+```
+In session controller we will have to override `respond_to_on_destroy` method to show our response otherwise it will use method provided by devise. So, add the private methods shown below.
+```
+class  Users::SessionsController < Devise::SessionsController
+	respond_to  :json
+
+	private
+		def  respond_with(resource, option={})
+			render  json: {
+			res:  resource,
+			status: { code:  200, message:  'signed in: '+current_user.email , data:  current_user}
+			}, status:  :ok
+		end
+
+		def  respond_to_on_destroy
+		jwt_payload  =  JWT.decode(request.headers['Authorization'].split(' ')[1],Rails.application.credentials.fetch(:secret_key_base)).first
+		current_user  =  User.find(jwt_payload['sub'])
+		if  current_user
+			render  json: {
+			status:  200,
+			message:  "signed out user: "  +  current_user.email
+			}, status:  :ok
+		else
+			render  json: {
+			status:  401,
+			messages:  "user has no active session"
+			}, status:  :unauthorized
+		end
+	end
+end
+```
+What this function basically does is that it takes out the token, then find if the current user exists. Afterward, we prepared response accordingly.
+Now if you try hitting `localhost:3000/users/sign_out` with proper credentials and the token you should see the response we set earlier for successful signing out.
+Let's check how we can sign in. For that make a POST method as `localhost:3000/users/sign_in`. Populate the body as shown with proper credentials. For example,
+```
+{
+"user":  {
+	"email":  "super@test.com",
+	"password":  "123456"
+	}
+}
+```
+If you check the server log you will see somehting like `Processing by Users::SessionController#create....` which confirms that sign in operation worked successfully.
+We will now add a mechanism to see currently logged in member. In `app/controller/` make a file `member_details.rb` as follows.
+```
+class  MembersController < ApplicationController
+
+before_action  :authenticate_user!
+	def  index
+		render  json:  current_user, status:  :ok
+	end
+end
+```
+And add `get  '/member_details'  =>  'members#index'` to `routes.rb` in config. Create a GET method in Postman with `localhost:3000/member_details`. Once you hit send, you will see which member is logged in.
+
+## Making CRUD operations

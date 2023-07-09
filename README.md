@@ -1,6 +1,6 @@
 # Ruby on Rails: Authentication, Access Control & Rate Limiting
 
-Steps are necessary to get the application running on local machine:
+## Steps are necessary to get the application running on local machine:
 
 * Ruby version: 3.0
 
@@ -11,8 +11,6 @@ Steps are necessary to get the application running on local machine:
 * Database creation: ``` rails db:create; rails db:migrate ``` inside the project root.
 
 * To run the project: ``` rails s ```
-
-# Ruby on Rails API: Authentication, Access Control & Rate Limiting
 
 In this tutorial, we will be diving down into ruby on rails API. You will learn how to
 authenticate user with devise gem as well as authorization using cancancan gem.

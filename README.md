@@ -288,3 +288,93 @@ end
 And add `get  '/member_details'  =>  'members#index'` to `routes.rb` in config. Create a GET method in Postman with `localhost:3000/member_details`. Once you hit send, you will see which member is logged in.
 
 ## Making CRUD operations
+This is the part where things gets interesting as in this portion we will be making the API end points. Lets create model,
+```
+rails g model company name year user:references
+```
+As we are using reference, we will have to let the user model know about this too. So, add `has_many :companies` to `user.rb` model. Now run the command `rails db:migrate`. As companies must have user assigned to it, add validation by incorporating the in the `company.rb` model.
+```
+validates  :name, presence:  true, uniqueness:  true
+validates  :year, presence:  true
+```
+Afterward we will have to update the router letting it know about our newly created resource.
+```
+namespace  :api  do
+	namespace  :v1  do
+		resources  :companies
+	end
+end
+```
+Create `companies_controller.rb` in `../app/controller/api/v1/`.  Populate the controller as shown in the repository. After then, create api_controller inside `../app/controller` and add this so it will authenticate user in every hit.
+```
+class  ApiController < ApplicationController
+	before_action  :authenticate_user!
+end
+```
+## Access control
+We will start by adding `rails g migration add_role_to_users role:string`. This will create a migration file adding role to user table. Then run `rails db:migrate`.  Now, add the following to user model.
+```
+ROLES  =  %w{super_admin admin manager editor collaborator}
+ROLES.each  do |role_name|
+	define_method  "#{role_name}?"  do
+		role  ==  role_name
+	end
+end
+```
+To define role abilities, we will install `cancancan` gem. Add the gem to gemfile and do `bundle install`.
+Next, you'll generate the Ability class which will define the roles and abilities. Open your terminal and run the following command. This command will generate a file named `ability.rb` in the `app` directory.
+```
+rails generate cancan:ability
+```
+Open the `ability.rb` file generated in the previous step. Inside the `initialize` method, you can define the roles and abilities for your application.
+```
+class Ability
+  include CanCan::Ability
+  def initialize(user)
+    if user.super_admin?
+      can :manage, :all
+    elsif user.admin?
+      can :read, Company, user_id: user.id
+      can :destroy, Company, user_id: user.id
+    elsif user.manager?
+      can :read, Company, user_id: user.id
+      can :update, Company, user_id: user.id
+    elsif user.collaborator?
+      can :read, Company, user_id: user.id
+    end
+  end
+end
+```
+Now, assuming your User model has a `role` attribute (string or integer) to store the role, you can assign a role to the user you created. For example, if you have an `admin` role, you can run the following command to assign that role in rails console.
+```
+user.update(role: 'admin')
+```
+
+## Rate limiting
+Open your Gemfile and add the following line:
+`gem 'rack-attack'`
+
+Save the file and run `bundle install` to install the gem.
+
+Open your `config/application.rb` file and add the following line inside the `class Application < Rails::Application` block:
+```config.middleware.use Rack::Attack```
+This ensures that Rack::Attack middleware is used in your Rails application.
+
+Put the following code inside `../config/initializers/rack_attack.rb`. Use it as template.
+```
+class  Rack::Attack
+
+	Rack::Attack.cache.store  =  ActiveSupport::Cache::MemoryStore.new
+
+	throttle('api/ip', limit:  3, period:  10) do |req|
+
+		if  req.path.match?(/^\/api\/v1\/companies$/i) &&  req.get?
+			req.ip
+		elsif  req.path.match?(/^\/api\/v1\/companies\/\d+$/) &&  req.patch?
+			req.ip
+		elsif  req.path.match?(/^\/api\/v1\/companies\/\d+$/) &&  req.delete?
+			req.ip
+		end
+	end
+end
+```

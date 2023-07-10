@@ -168,10 +168,10 @@ the devise gem.
 ```
 Rails.application.routes.draw do
 
-	devise_for :users, controllers: {
-		sessions: 'users/sessions',
-		registrations: 'users/registrations'
-	}
+  devise_for :users, controllers: {
+    sessions: 'users/sessions',
+    registrations: 'users/registrations'
+}
 
 end
 ```
@@ -216,51 +216,51 @@ If you have done everything correctly, then you should see that user has been cr
 Create another tab with DELETE method in postman. Now hit `localhost:3000/users/sign_out`, before hitting send, go to header, then add `Authorization` field and pass the value as `Bearer  [token]`. Once you hit send you are likely to get an error `...undefined method 'respond_to'....`. To solve it we will have to add `respond_to` method to both registration and session controller. Add the following into registration controller.
 ```
 class  Users::RegistrationsController < Devise::RegistrationsController
-	respond_to  :json
+  respond_to  :json
 
-	private
-		def  respond_with(resource, option={})
-			if  resource.persisted?
-				render  json: {
-					status: { code:  200, message:  'signed up successfully', data:  resource}
-				}, status:  :ok
-			else
-				render  json: {
-				status: {message:  'operation failed', errors: resource.errors.full_messages},
-				status:  :unprocessable_entity
-			}
-		end
-	end
+  private
+    def  respond_with(resource, option={})
+      if  resource.persisted?
+        render  json: {
+        status: { code:  200, message:  'signed up successfully', data:  resource}
+        }, status:  :ok
+      else
+        render  json: {
+        status: {message:  'operation failed', errors: resource.errors.full_messages},
+        status:  :unprocessable_entity
+        }
+      end
+    end
 end
 ```
 In session controller we will have to override `respond_to_on_destroy` method to show our response otherwise it will use method provided by devise. So, add the private methods shown below.
 ```
 class  Users::SessionsController < Devise::SessionsController
-	respond_to  :json
+  respond_to  :json
 
-	private
-		def  respond_with(resource, option={})
-			render  json: {
-			res:  resource,
-			status: { code:  200, message:  'signed in: '+current_user.email , data:  current_user}
-			}, status:  :ok
-		end
+  private
+    def  respond_with(resource, option={})
+      render  json: {
+      res:  resource,
+      status: { code:  200, message:  'signed in: '+current_user.email , data:  current_user}
+      }, status:  :ok
+    end
 
-		def  respond_to_on_destroy
-		jwt_payload  =  JWT.decode(request.headers['Authorization'].split(' ')[1],Rails.application.credentials.fetch(:secret_key_base)).first
-		current_user  =  User.find(jwt_payload['sub'])
-		if  current_user
-			render  json: {
-			status:  200,
-			message:  "signed out user: "  +  current_user.email
-			}, status:  :ok
-		else
-			render  json: {
-			status:  401,
-			messages:  "user has no active session"
-			}, status:  :unauthorized
-		end
-	end
+    def  respond_to_on_destroy
+      jwt_payload  =  JWT.decode(request.headers['Authorization'].split(' ')[1],Rails.application.credentials.fetch(:secret_key_base)).first
+      current_user  =  User.find(jwt_payload['sub'])
+      if  current_user
+        render  json: {
+        status:  200,
+        message:  "signed out user: "  +  current_user.email
+        }, status:  :ok
+      else
+        render  json: {
+        status:  401,
+        messages:  "user has no active session"
+        }, status:  :unauthorized
+      end
+    end
 end
 ```
 What this function basically does is that it takes out the token, then find if the current user exists. Afterward, we prepared response accordingly.
@@ -280,9 +280,9 @@ We will now add a mechanism to see currently logged in member. In `app/controlle
 class  MembersController < ApplicationController
 
 before_action  :authenticate_user!
-	def  index
-		render  json:  current_user, status:  :ok
-	end
+  def  index
+    render  json:  current_user, status:  :ok
+  end
 end
 ```
 And add `get  '/member_details'  =>  'members#index'` to `routes.rb` in config. Create a GET method in Postman with `localhost:3000/member_details`. Once you hit send, you will see which member is logged in.
@@ -300,15 +300,15 @@ validates  :year, presence:  true
 Afterward we will have to update the router letting it know about our newly created resource.
 ```
 namespace  :api  do
-	namespace  :v1  do
-		resources  :companies
-	end
+  namespace  :v1  do
+    resources  :companies
+  end
 end
 ```
 Create `companies_controller.rb` in `../app/controller/api/v1/`.  Populate the controller as shown in the repository. After then, create api_controller inside `../app/controller` and add this so it will authenticate user in every hit.
 ```
 class  ApiController < ApplicationController
-	before_action  :authenticate_user!
+  before_action  :authenticate_user!
 end
 ```
 ## Access control
@@ -316,9 +316,9 @@ We will start by adding `rails g migration add_role_to_users role:string`. This 
 ```
 ROLES  =  %w{super_admin admin manager editor collaborator}
 ROLES.each  do |role_name|
-	define_method  "#{role_name}?"  do
-		role  ==  role_name
-	end
+  define_method  "#{role_name}?"  do
+    role  ==  role_name
+  end
 end
 ```
 To define role abilities, we will install `cancancan` gem. Add the gem to gemfile and do `bundle install`.

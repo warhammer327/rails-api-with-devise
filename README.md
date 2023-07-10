@@ -364,17 +364,16 @@ Put the following code inside `../config/initializers/rack_attack.rb`. Use it as
 ```
 class  Rack::Attack
 
-	Rack::Attack.cache.store  =  ActiveSupport::Cache::MemoryStore.new
+Rack::Attack.cache.store  =  ActiveSupport::Cache::MemoryStore.new
 
-	throttle('api/ip', limit:  3, period:  10) do |req|
-
-		if  req.path.match?(/^\/api\/v1\/companies$/i) &&  req.get?
-			req.ip
-		elsif  req.path.match?(/^\/api\/v1\/companies\/\d+$/) &&  req.patch?
-			req.ip
-		elsif  req.path.match?(/^\/api\/v1\/companies\/\d+$/) &&  req.delete?
-			req.ip
-		end
-	end
+  throttle('api/ip', limit:  3, period:  10) do |req|
+    if  req.path.match?(/^\/api\/v1\/companies$/i) &&  req.get?
+      req.ip
+    elsif  req.path.match?(/^\/api\/v1\/companies\/\d+$/) &&  req.patch?
+      req.ip
+    elsif  req.path.match?(/^\/api\/v1\/companies\/\d+$/) &&  req.delete?
+      req.ip
+    end
+  end
 end
 ```
